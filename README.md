@@ -181,6 +181,49 @@ Running `docker compose up -d` should trigger Docker to build an image from loca
 See also: [`pull_policy`](https://github.com/compose-spec/compose-spec/blob/master/05-services.md#pull_policy
 ).
 
+### Kubernetes (PTDemo.LOCAL)
+
+#### Build Docker image
+
+```
+docker build --tag dvwa:latest .
+docker tag dvwa:latest harbor.ptdemo.local/ptdemo/dvwa:latest
+```
+
+#### Test Docker image
+
+```
+docker run --detach \
+  --publish 8030:80 \
+  --restart=no \
+  --name dvwa \
+  --network ptdemo-bridge \
+  --env DATABASE_SERVER=db.ptdemo.local \
+  --env DEFAULT_SECURITY_LEVEL=low \
+  --env DISABLE_AUTHENTICATION=true \
+  dvwa:latest 
+```
+
+#### Publish Docker image to repository
+
+```
+docker push harbor.ptdemo.local/ptdemo/dvwa:latest
+```
+
+#### Create ConfigMap and Secret and apply Kubernetes manifests:
+
+```
+kubectl create configmap dvwa-config \
+  --from-literal=DATABASE_SERVER=db.ptdemo.local \
+  --from-literal=DEFAULT_SECURITY_LEVEL=low \
+  --from-literal=DISABLE_AUTHENTICATION=true \
+  --namespace ptdemo
+kubectl create secret generic dvwa-secret \
+  --from-literal=DATABASE_PASSWORD='P@ssw0rd' \
+  --namespace ptdemo
+kubectl apply -f k8s
+```
+
 ### PHP Versions
 
 Ideally you should be using the latest stable version of PHP as that is the version that this app will be developed and tested on.

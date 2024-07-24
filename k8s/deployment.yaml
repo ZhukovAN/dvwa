@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dvwa
+  namespace: ptdemo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dvwa-server
+  template:
+    metadata:
+      labels:
+        app: dvwa-server
+    spec:
+      containers:
+        - name: dvwa
+          image: harbor.ptdemo.local/ptdemo/dvwa:latest
+          imagePullPolicy: Always
+          resources:
+            limits:
+              memory: "128Mi"
+              cpu: "200m"
+            requests:
+              memory: "32Mi"
+              cpu: "100m"
+          ports:
+            - name: http
+              containerPort: 80
+          env:
+          - name: DATABASE_SERVER
+            valueFrom:
+              configMapKeyRef:
+                name: dvwa-config
+                key: DATABASE_SERVER
+                optional: true
+          - name: DATABASE_USER
+            valueFrom:
+              configMapKeyRef:
+                name: dvwa-config
+                key: DATABASE_USER
+                optional: true
+          - name: DATABASE_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: dvwa-secret
+                key: DATABASE_PASSWORD
+                optional: true
+          - name: DATABASE_PORT
+            valueFrom:
+              configMapKeyRef:
+                name: dvwa-config
+                key: DATABASE_PORT
+                optional: true
+          - name: DISABLE_AUTHENTICATION
+            valueFrom:
+              configMapKeyRef:
+                name: dvwa-config
+                key: DISABLE_AUTHENTICATION
+                optional: true
+          - name: DEFAULT_SECURITY_LEVEL
+            valueFrom:
+              configMapKeyRef:
+                name: dvwa-config
+                key: DEFAULT_SECURITY_LEVEL
+                optional: true
