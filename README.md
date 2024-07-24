@@ -218,7 +218,7 @@ kubectl create configmap dvwa-config \
   --from-literal=DEFAULT_SECURITY_LEVEL=low \
   --from-literal=DISABLE_AUTHENTICATION=true \
   --namespace ptdemo
-kubectl create secret generic dvwa \
+kubectl create secret generic dvwa-secret \
   --from-literal=DATABASE_PASSWORD='P@ssw0rd' \
   --namespace ptdemo
 kubectl apply -f k8s
