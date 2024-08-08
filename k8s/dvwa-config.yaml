@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dvwa-config
+  namespace: ptdemo
+data:
+ DATABASE_SERVER: 'mariadb-service.demo.svc.cluster.local'
+ DATABASE_PORT: '3306'
+ DATABASE_USER: 'root'
+
+
+
