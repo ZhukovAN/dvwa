@@ -13,9 +13,11 @@ spec:
       labels:
         app: dvwa-server
     spec:
+      imagePullSecrets:
+      - name: regcred
       containers:
         - name: dvwa
-          image: harbor.ptdemo.local/ptdemo/dvwa:latest
+          image: harbor.ptdemo.local/ptdemo/dvwa:latest 
           imagePullPolicy: Always
           resources:
             limits:
@@ -43,8 +45,8 @@ spec:
           - name: DATABASE_PASSWORD
             valueFrom:
               secretKeyRef:
-                name: dvwa-secret
-                key: DATABASE_PASSWORD
+                name: mariadb-secret
+                key: mariadb-root-password
                 optional: true
           - name: DATABASE_PORT
             valueFrom:
