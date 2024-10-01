@@ -14,6 +14,7 @@ PTDemo.LOCAL changelog
 + Basic GitLab CI pipeline added. Pipeline uses Buildah to create and push DVWA Docker image
 + PT Application Inspector SAST job added to GitLab CI pipeline
 + PT Container Security scan added for Dockerfile, K8s manifests and image pushed to registry
++ PT Container Security TAR file scan added
 
 v1.10 (*Not Yet Released)
 ======

@@ -93,9 +93,14 @@ build-image:
       --file ${CI_PROJECT_DIR}/Dockerfile 
       --tag ${DESTINATION_IMAGE_TAG}
       --build-arg "SOURCE_TOOL_IMAGE=${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/php:8-apache"
+    - buildah build --file Dockerfile --tag ${DESTINATION_IMAGE_TAG}
+    - buildah push --format docker ${DESTINATION_IMAGE_TAG} docker-archive:${CI_PROJECT_NAME}.tar
     - buildah push ${DESTINATION_IMAGE_TAG}
     - buildah tag ${DESTINATION_IMAGE_TAG} ${REMOTE_DESTINATION_IMAGE_TAG}
     - buildah push ${REMOTE_DESTINATION_IMAGE_TAG}
+  artifacts:
+    paths:
+      - ${CI_PROJECT_NAME}.tar
 
 scan-remote-image:
   stage: package
@@ -119,6 +124,28 @@ scan-remote-image:
     name: ptcs-ast-results
     paths:
       - .ptcs/report.ptcs.image.json
+
+scan-tar-image:
+  stage: package
+  image: 
+    name: ${PTCS_CLI_IMAGE_TAG}
+    entrypoint: [""]
+  needs:
+    - build-image
+  before_script:
+    - mkdir .ptcs
+  script:
+    - set +e
+    - ptcs-cli scan image --login ${PTCS_USER} --password ${PTCS_PASSWORD} --ptcsurl=${PTCS_URL}
+      --report-output=.ptcs/report.ptcs.image.html
+      --report-format=html
+      ${CI_PROJECT_NAME}.tar
+    - set -e
+  artifacts:
+    when: always
+    name: ptcs-ast-results
+    paths:
+      - .ptcs/report.ptcs.image.html
 
 deploy-to-qa:
   stage: deploy
