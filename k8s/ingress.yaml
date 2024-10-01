@@ -1,12 +1,10 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: dvwa-ingress
-  namespace: ptdemo
-  annotations:
-    nginx.ingress.kubernetes.io/proxy-body-size: "0"
-    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
-    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+  name: dvwa-web
+  labels:
+    app: dvwa
+    component: web
 spec:
   ingressClassName: nginx
   rules:
@@ -17,6 +15,6 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: dvwa-service
+            name: dvwa-web
             port:
               number: 80
