@@ -1,6 +1,17 @@
 DAMN VULNERABLE WEB APPLICATION
 =======================
 
+PTDemo.LOCAL changelog
+==============
+
++ Explicit namespaces are removed from manifests
++ MariaDB manifest changed from StatefulSet to Deployment as there's no need to keep data
++ Liveness and readiness probes are added to Deployments
++ Redundant Ingress annotations are removed
++ Database user moved from ConfigMap (@zorg-bessarab) to Secret
++ K8s deployment job added to GitLab CI pipeline
++ NET_RAW capability added for Command Injection support as it required for `ping` to work
+
 v1.10 (*Not Yet Released)
 ======
 

@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dvwa-db
+  labels:
+    app: dvwa
+    component: database
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dvwa
+      component: database
+  template:
+    metadata:
+      labels:
+        app: dvwa
+        component: database
+    spec:
+      imagePullSecrets:
+        - name: harbor-registry
+      containers:
+        - name: mariadb
+          image: harbor.ptdemo.local/dockerhub/mariadb:10.6.16
+          ports:
+            - containerPort: 3306
+          env:
+            - name: MARIADB_DATABASE
+              valueFrom:
+                configMapKeyRef:
+                  name: dvwa-db
+                  key: DATABASE_NAME
+            - name: MARIADB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: dvwa-db
+                  key: DATABASE_USER
+            - name: MARIADB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: dvwa-db
+                  key: DATABASE_PASSWORD
+            - name: MARIADB_RANDOM_ROOT_PASSWORD
+              value: "1"
+          startupProbe:
+            exec:
+              command:
+                - /bin/bash
+                - -ec
+                - mysqladmin ping -u"${MARIADB_USER}" -p"${MARIADB_PASSWORD}"
+          livenessProbe:
+            exec:
+              command:
+                - /bin/bash
+                - -ec
+                - mysqladmin status -u"${MARIADB_USER}" -p"${MARIADB_PASSWORD}"
+      restartPolicy: Always

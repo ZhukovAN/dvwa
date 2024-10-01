@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dvwa
+  labels:
+    app: dvwa
+data:
+  DATABASE_SERVER: 'dvwa-db.ptdemo-qa.svc.cluster.local'
+  DATABASE_PORT: '3306'
+  DATABASE_NAME: 'dvwa'
+  DEFAULT_SECURITY_LEVEL: 'low'
+  DISABLE_AUTHENTICATION: 'true'

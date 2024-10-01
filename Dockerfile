@@ -1,4 +1,15 @@
-FROM docker.io/library/php:8-apache
+ARG SOURCE_TOOL_IMAGE=php:8-apache
+FROM ${SOURCE_TOOL_IMAGE}
+
+# Default DB connection parameters
+ENV DATABASE_NAME=dvwa
+ENV DATABASE_SERVER=db.ptdemo.local
+ENV DATABASE_PORT=3306
+ENV DATABASE_USER=dvwa
+
+# Application settings are hardened by default
+ENV DEFAULT_SECURITY_LEVEL=impossible
+ENV DISABLE_AUTHENTICATION=false
 
 LABEL org.opencontainers.image.source=https://github.com/digininja/DVWA
 LABEL org.opencontainers.image.description="DVWA pre-built image."

@@ -1,23 +1,27 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: dvwa
-  namespace: ptdemo
+  name: dvwa-web
+  labels:
+    app: dvwa
+    component: web
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: dvwa-server
+      app: dvwa
+      component: web
   template:
     metadata:
       labels:
-        app: dvwa-server
+        app: dvwa
+        component: web
     spec:
       imagePullSecrets:
-      - name: regcred
+        - name: harbor-registry
       containers:
         - name: dvwa
-          image: harbor.ptdemo.local/ptdemo/dvwa:latest 
+          image: harbor.ptdemo.local/applications/dvwa:2.3.0
           imagePullPolicy: Always
           resources:
             limits:
@@ -33,36 +37,53 @@ spec:
           - name: DATABASE_SERVER
             valueFrom:
               configMapKeyRef:
-                name: dvwa-config
+                name: dvwa
                 key: DATABASE_SERVER
-                optional: true
-          - name: DATABASE_USER
+          - name: DATABASE_PORT
             valueFrom:
               configMapKeyRef:
-                name: dvwa-config
+                name: dvwa
+                key: DATABASE_PORT
+                optional: true
+          - name: DATABASE_NAME
+            valueFrom:
+              configMapKeyRef:
+                name: dvwa
+                key: DATABASE_NAME
+          - name: DATABASE_USER
+            valueFrom:
+              secretKeyRef:
+                name: dvwa-db
                 key: DATABASE_USER
                 optional: true
           - name: DATABASE_PASSWORD
             valueFrom:
               secretKeyRef:
-                name: mariadb-secret
-                key: mariadb-root-password
-                optional: true
-          - name: DATABASE_PORT
-            valueFrom:
-              configMapKeyRef:
-                name: dvwa-config
-                key: DATABASE_PORT
+                name: dvwa-db
+                key: DATABASE_PASSWORD
                 optional: true
           - name: DISABLE_AUTHENTICATION
             valueFrom:
               configMapKeyRef:
-                name: dvwa-config
+                name: dvwa
                 key: DISABLE_AUTHENTICATION
                 optional: true
           - name: DEFAULT_SECURITY_LEVEL
             valueFrom:
               configMapKeyRef:
-                name: dvwa-config
+                name: dvwa
                 key: DEFAULT_SECURITY_LEVEL
                 optional: true
+          securityContext:
+            capabilities:
+              add:
+                - NET_RAW
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+      restartPolicy: Always
