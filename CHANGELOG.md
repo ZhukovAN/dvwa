@@ -13,6 +13,7 @@ PTDemo.LOCAL changelog
 + NET_RAW capability added for Command Injection support as it required for `ping` to work
 + Basic GitLab CI pipeline added. Pipeline uses Buildah to create and push DVWA Docker image
 + PT Application Inspector SAST job added to GitLab CI pipeline
++ PT Container Security scan added for Dockerfile, K8s manifests and image pushed to registry
 
 v1.10 (*Not Yet Released)
 ======

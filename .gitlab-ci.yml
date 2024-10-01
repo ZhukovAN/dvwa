@@ -4,6 +4,7 @@ variables:
   REMOTE_DESTINATION_IMAGE_TAG: ${HARBOR_HOST}/applications/${CI_PROJECT_NAME}:${DESTINATION_VERSION}
   QA_URL: "http://dvwa.ptdemo.local"
   PTAI_IMAGE_TAG: ${CI_REGISTRY}/tools/aisa:${PTAI_VERSION}
+  PTCS_CLI_IMAGE_TAG: ${CI_REGISTRY}/tools/ptcs-cli:0.0.10
 
 stages:
   - sast
@@ -34,6 +35,50 @@ sast:
     reports:
       sast: .ptai/gitlab.json
 
+scan-dockerfile:
+  stage: sast
+  image: 
+    name: ${PTCS_CLI_IMAGE_TAG}
+    entrypoint: [""]
+  before_script:
+    - mkdir .ptcs
+  script:
+    - set +e
+    - ptcs-cli scan dockerfile --login ${PTCS_USER} --password ${PTCS_PASSWORD} --ptcsurl=${PTCS_URL}
+      --report-output=.ptcs/report.ptcs.dockerfile.html
+      --report-format=html
+      --enforced-rules a16bdcf2-e00d-486d-a705-42676a7a3620
+      ./Dockerfile
+    - set -e
+  artifacts:
+    when: always
+    name: ptcs-ast-results
+    paths:
+      - .ptcs/report.ptcs.dockerfile.html
+
+scan-manifests:
+  stage: sast
+  image: 
+    name: ${PTCS_CLI_IMAGE_TAG}
+    entrypoint: [""]
+  before_script:
+    - mkdir .ptcs
+  script:
+    - set +e
+    - export SINGLE_MANIFEST_FILE=$(mktemp -d)/${CI_PROJECT_NAME}.yaml && touch ${SINGLE_MANIFEST_FILE}
+    - find ./k8s -type f -name '*.yaml' -exec sh -c 'cat $1 >> ${SINGLE_MANIFEST_FILE} && echo -e "\n---\n" >> ${SINGLE_MANIFEST_FILE}' -- {} \;
+    - ptcs-cli scan kubernetes --login ${PTCS_USER} --password ${PTCS_PASSWORD} --ptcsurl=${PTCS_URL}
+      --report-output=.ptcs/report.ptcs.manifest.html
+      --report-format=html
+      --enforced-rules a16bdcf2-e00d-486d-a705-42676a7a3620
+      ${SINGLE_MANIFEST_FILE}
+    - set -e
+  artifacts:
+    when: always
+    name: ptcs-ast-results
+    paths:
+      - .ptcs/report.ptcs.manifest.html
+
 build-image:
   stage: package
   image: 
@@ -51,6 +96,29 @@ build-image:
     - buildah push ${DESTINATION_IMAGE_TAG}
     - buildah tag ${DESTINATION_IMAGE_TAG} ${REMOTE_DESTINATION_IMAGE_TAG}
     - buildah push ${REMOTE_DESTINATION_IMAGE_TAG}
+
+scan-remote-image:
+  stage: package
+  image: 
+    name: ${PTCS_CLI_IMAGE_TAG}
+    entrypoint: [""]
+  needs:
+    - build-image
+  before_script:
+    - mkdir .ptcs
+  script:
+    - set +e
+    - ptcs-cli scan image --login ${PTCS_USER} --password ${PTCS_PASSWORD} --ptcsurl=${PTCS_URL}
+      --report-output=.ptcs/report.ptcs.image.json
+      --report-format=cyclonedx-json
+      --remote 
+      ${REMOTE_DESTINATION_IMAGE_TAG}
+    - set -e
+  artifacts:
+    when: always
+    name: ptcs-ast-results
+    paths:
+      - .ptcs/report.ptcs.image.json
 
 deploy-to-qa:
   stage: deploy
