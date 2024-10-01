@@ -3,10 +3,36 @@ variables:
   DESTINATION_IMAGE_TAG: ${CI_REGISTRY_IMAGE}:${DESTINATION_VERSION}
   REMOTE_DESTINATION_IMAGE_TAG: ${HARBOR_HOST}/applications/${CI_PROJECT_NAME}:${DESTINATION_VERSION}
   QA_URL: "http://dvwa.ptdemo.local"
+  PTAI_IMAGE_TAG: ${CI_REGISTRY}/tools/aisa:${PTAI_VERSION}
 
 stages:
+  - sast
   - package
   - deploy
+
+sast:
+  stage: sast
+  image: 
+    name: ${PTAI_IMAGE_TAG}
+    entrypoint: [""]
+  before_script:
+    - mkdir .ptai 
+  script:
+    - aisa --version
+    - aisa --set-settings -u ${PTAI_URL} -t ${PTAI_TOKEN}
+    - aisa --project-name ${CI_PROJECT_NAME} --scan-target . --report HTML Gitlab Sarif --reports-folder .ptai
+  after_script:
+    - mv .ptai/Report_${CI_PROJECT_NAME}_Gitlab_*.json .ptai/gitlab.json
+    - mv .ptai/Report_${CI_PROJECT_NAME}_Sarif_*.sarif .ptai/sarif.json
+    - mv .ptai/Report_${CI_PROJECT_NAME}_PlainReport_*.html .ptai/sast.html
+  artifacts:
+    when: always
+    name: ptai-sast-results
+    paths:
+      - .ptai/sarif.json
+      - .ptai/sast.html
+    reports:
+      sast: .ptai/gitlab.json
 
 build-image:
   stage: package
