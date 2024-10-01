@@ -7,6 +7,7 @@ variables:
 stages:
   - package
   - deploy
+  - dast
 
 build-image:
   stage: package
@@ -51,3 +52,26 @@ init-qa-database:
     - until [ `eval ${CURL}` -eq 200 ]; do sleep 1; done
     - TOKEN=$(curl ${QA_URL}/setup.php | awk -F 'value=' '/user_token/ {print $2}' | cut -d "'" -f2)
     - STATUS=`curl -X POST -Ls -o /dev/null -w '%{http_code}\n' -d "create_db=Create+%2F+Reset+Database&user_token=${TOKEN}" ${QA_URL}/setup.php`
+
+dast:
+  stage: dast
+  image: 
+    name: ${CI_REGISTRY}/tools/ptbb-cli:${PTBB_CLI_VERSION}
+  before_script:
+    - mkdir .ptbb 
+  script:
+    - ptbb-cli.sh 
+      --blackbox-url ${PTBB_URL}
+      --blackbox-api-token ${PTBB_TOKEN} 
+      --target-url ${QA_URL} --auto-create
+      --ignore-ssl 
+      --report-template html 
+      --report-locale ru 
+      --report-dir ./.ptbb
+  after_script:
+    - mv .ptbb/*.html .ptbb/dast.html
+  artifacts:
+    when: always
+    name: ptbb-dast-results
+    paths:
+      - .ptbb/dast.html
